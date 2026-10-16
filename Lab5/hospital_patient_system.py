@@ -2,7 +2,6 @@ import hashlib
 import json
 import os
 import secrets
-import math
 
 patient_records = {
     "P101": {"name": "John Doe", "ward": "ICU", "is_admitted": True, "bill": 2400.0},
@@ -11,7 +10,9 @@ patient_records = {
 }
 
 
-def admitPatient(p_id, name, ward, intake_log=[]):
+def admitPatient(p_id, name, ward, intake_log=None):
+    if intake_log is None:
+        intake_log = []
     if p_id in patient_records:
         return False
     patient_records[p_id] = {"name": name, "ward": ward, "is_admitted": True, "bill": 0.0}
@@ -20,20 +21,16 @@ def admitPatient(p_id, name, ward, intake_log=[]):
 
 
 def discharge_patient(p_id):
-    try:
-        patient_records[p_id]["is_admitted"] = False
-    except:
-        pass
+    patient = patient_records.get(p_id)
+    if patient is None:
+        return False
+    patient["is_admitted"] = False
+    return True
 
 
 def verify_admission_status(p_id):
-    bed_charge = 75.0
-    if patient_records.get(p_id) == None:
-        return False
-    if patient_records[p_id]["is_admitted"]:
-        return True
-    else:
-        return False
+    patient = patient_records.get(p_id)
+    return patient is not None and patient["is_admitted"] is True
 
 
 def calculate_treatment_cost(p_id, multiplier=1.12):
@@ -55,12 +52,8 @@ def export_patient_ledger(filename="patient_records.json"):
     print("Patient ledger exported to: " + filename)
 
 
-def get_ward_summary(patient_records):
-    c = 0
-    for p, details in patient_records.items():
-        if details["is_admitted"]:
-            c += 1
-    return c
+def get_ward_summary(records):
+    return sum(1 for details in records.values() if details["is_admitted"] is True)
 
 
 def main():
@@ -74,4 +67,5 @@ def main():
     print("Active admits:", get_ward_summary(patient_records))
 
 
-main()
+if __name__ == "__main__":
+    main()
